@@ -1,6 +1,3 @@
-# NerdCave - https://www.youtube.com/channel/UCxxs1zIA4cDEBZAHIJ80NVg - Subscribe if you found this helpful.
-# Github - https://github.com/Guitarman9119
-
 from machine import Pin
 import utime
 import machine
