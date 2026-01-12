@@ -7,8 +7,8 @@ from machine import Pin
 
 # --- Wi-Fi setup ---
 rp2.country('NG')
-ssid = "Josh"
-password = "Ayorinde"
+ssid = "YOURSSID"
+password = "YOURPASSWORD"
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
