@@ -1,0 +1,66 @@
+import network
+import rp2
+import time
+import socket
+import dht
+from machine import Pin
+
+# --- Wi-Fi setup ---
+rp2.country('NG')
+ssid = "Josh"
+password = "Ayorinde"
+
+wlan = network.WLAN(network.STA_IF)
+wlan.active(True)
+wlan.connect(ssid, password)
+
+while not wlan.isconnected():
+    time.sleep(0.5)
+
+ip = wlan.ifconfig()[0]
+print("Connected, IP:", ip)
+
+# --- DHT sensor ---
+sensor = dht.DHT11(Pin(15))
+
+# --- Web server ---
+addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
+s = socket.socket()
+s.bind(addr)
+s.listen(1)
+
+print("Web server running...")
+
+while True:
+    try:
+        sensor.measure()
+        temp = sensor.temperature()
+        hum = sensor.humidity()
+
+        cl, addr = s.accept()
+        request = cl.recv(1024)
+
+        html = f"""HTTP/1.0 200 OK\r
+Content-Type: text/html\r
+Connection: close\r
+\r
+<html>
+        <head>
+            <title>Pico W Temperature Monitor</title>
+            <meta http-equiv="refresh" content="5">
+        </head>
+        <body style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 30px;">
+            <h1>Temperature Monitoring</h1>
+            <p><b>Temperature:</b> {temp} °C</p>
+            <p><b>Humidity:</b> {hum} %</p>
+            <p>IP: {ip}</p>
+        </body>
+        </html>
+        """
+
+        cl.send(html)
+        cl.close()
+
+    except Exception as e:
+        print("Error:", e)
+
