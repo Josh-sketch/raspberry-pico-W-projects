@@ -1,0 +1,63 @@
+import network
+import rp2
+import time
+import dht
+import urequests
+from machine import Pin
+
+# ---------------- Wi-Fi setup ----------------
+rp2.country('NG')
+
+ssid = "YOUR_SSID"
+password = "YOUR_PASSWORD"
+
+wlan = network.WLAN(network.STA_IF)
+wlan.active(True)
+wlan.connect(ssid, password)
+
+while not wlan.isconnected():
+    time.sleep(0.5)
+
+print("Connected to WiFi:", wlan.ifconfig()[0])
+
+# ---------------- Favoriot Config ----------------
+FAVORIOT_URL = "https://apiv2.favoriot.com/v2/streams"
+FAVORIOT_API_KEY = "YOUR_API_KEY"
+DEVICE_DEVELOPER_ID = "YOUR_DEV_ID"
+
+headers = {
+    "Content-Type": "application/json",
+    "apikey": FAVORIOT_API_KEY
+}
+
+# ---------------- DHT Sensor ----------------
+sensor = dht.DHT11(Pin(15))
+
+# ---------------- Main Loop ----------------
+while True:
+    try:
+        sensor.measure()
+        temp = sensor.temperature()
+        hum = sensor.humidity()
+
+        payload = {
+            "device_developer_id": DEVICE_DEVELOPER_ID,
+            "data": {
+                "temperature": temp,
+                "humidity": hum
+            }
+        }
+
+        response = urequests.post(
+            FAVORIOT_URL,
+            json=payload,
+            headers=headers
+        )
+
+        print("Sent to Favoriot:", response.text)
+        response.close()
+
+    except Exception as e:
+        print("Error:", e)
+    time.sleep(10)
+
